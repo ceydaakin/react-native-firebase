@@ -157,6 +157,35 @@ describe('Firestore', function () {
       const query2 = Filter.or(filter1, filter2);
     });
 
+    it('`Filter.and` and `Filter.or` accept up to 30 filters', function () {
+      const filters = (n: number) => Array.from({ length: n }, (_, i) => Filter('type', '==', i));
+
+      expect(() => Filter.and(...filters(30))).not.toThrow();
+      expect(() => Filter.or(...filters(30))).not.toThrow();
+      expect(() => Filter.and(...filters(31))).toThrow(
+        'Expected 1-30 instances of Filter, but got 31 Filters',
+      );
+      expect(() => Filter.or(...filters(31))).toThrow(
+        'Expected 1-30 instances of Filter, but got 31 Filters',
+      );
+    });
+
+    it('`or` and `and` accept up to 30 elements for in operators', function () {
+      const ref = collection(getFirestore(), 'test');
+      const values = (n: number) => Array.from({ length: n }, (_, i) => i);
+
+      (['in', 'array-contains-any', 'not-in'] as const).forEach(op => {
+        [or, and].forEach(composite => {
+          expect(() =>
+            query(ref, composite(where('type', op, values(30)), where('a', '==', 1))),
+          ).not.toThrow();
+          expect(() =>
+            query(ref, composite(where('type', op, values(31)), where('a', '==', 1))),
+          ).toThrow(`'${op}' filters support a maximum of 30 elements in the value array.`);
+        });
+      });
+    });
+
     it('`doc` function is properly exposed to end user', function () {
       expect(doc).toBeDefined();
     });

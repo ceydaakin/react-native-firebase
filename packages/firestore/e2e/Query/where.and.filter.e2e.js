@@ -187,7 +187,7 @@ describe(' firestore().collection().where(AND Filters)', function () {
 
         return Promise.reject(new Error('Did not throw an Error.'));
       } catch (error) {
-        error.message.should.containEql('maximum of 10 elements in the value');
+        error.message.should.containEql('maximum of 30 elements in the value');
         return Promise.resolve();
       }
     });
@@ -270,23 +270,18 @@ describe(' firestore().collection().where(AND Filters)', function () {
       }
     });
 
-    it("should throw error when 'not-in' filter has a list of more than 10 items", async function () {
+    it("should throw error when 'not-in' filter has a list of more than 30 items", async function () {
       const { getFirestore, collection, query, where, and } = firestoreModular;
       const ref = collection(getFirestore(), COLLECTION);
+      const queryArray = Array.from({ length: 31 }, (_, i) => i + 1);
 
       try {
-        query(
-          ref,
-          and(
-            where('foo.bar', '==', 1),
-            where('foo.bar', 'not-in', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
-          ),
-        );
+        query(ref, and(where('foo.bar', '==', 1), where('foo.bar', 'not-in', queryArray)));
 
         return Promise.reject(new Error('Did not throw an Error.'));
       } catch (error) {
         error.message.should.containEql(
-          'filters support a maximum of 10 elements in the value array.',
+          'filters support a maximum of 30 elements in the value array.',
         );
         return Promise.resolve();
       }

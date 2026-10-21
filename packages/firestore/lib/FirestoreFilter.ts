@@ -86,8 +86,8 @@ export function Filter(
 }
 
 Filter.and = function and(...queries: _Filter[]): _Filter {
-  if (queries.length > 10 || queries.length < 1) {
-    throw new Error(`Expected 1-10 instances of Filter, but got ${queries.length} Filters`);
+  if (queries.length > 30 || queries.length < 1) {
+    throw new Error(`Expected 1-30 instances of Filter, but got ${queries.length} Filters`);
   }
 
   const validateFilters = queries.every(filter => filter instanceof _Filter);
@@ -118,8 +118,8 @@ function hasOrOperator(obj: _Filter): boolean {
 }
 
 Filter.or = function or(...queries: _Filter[]): _Filter {
-  if (queries.length > 10 || queries.length < 1) {
-    throw new Error(`Expected 1-10 instances of Filter, but got ${queries.length} Filters`);
+  if (queries.length > 30 || queries.length < 1) {
+    throw new Error(`Expected 1-30 instances of Filter, but got ${queries.length} Filters`);
   }
 
   const validateFilters = queries.every(filter => filter instanceof _Filter);
@@ -203,11 +203,11 @@ function mapFieldQuery(
       );
     }
 
-    if (value.length > 10) {
+    if (value.length > 30) {
       throw new Error(
         `third argument of Filter(*,_ , _) 'value' is invalid. '${String(
           operator,
-        )}' filters support a maximum of 10 elements in the value array.`,
+        )}' filters support a maximum of 30 elements in the value array.`,
       );
     }
   }
