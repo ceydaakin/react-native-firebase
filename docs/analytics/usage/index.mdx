@@ -216,6 +216,36 @@ $RNFirebaseAnalyticsEnableAdSupport = true
 
 Note: this setting will have no effect if you disabled Ad IDs as described above, since this setting is specifically linking in the `AdSupport` framework which requires the Ad IDs.
 
+# Link attribution with the UIScene life cycle (iOS)
+
+Firebase Analytics records the URLs and universal links that open your app (for example `utm_*` campaign parameters, which produce a `campaign_details` event and set the session's traffic source) by intercepting `UIApplicationDelegate` methods. When an app adopts the UIScene life cycle (a `UIApplicationSceneManifest` in `Info.plist` and a `SceneDelegate`, the default since React Native 0.88 and Expo SDK 58), iOS delivers those links to the scene delegate instead, so Firebase Analytics never sees them.
+
+As [documented by the Firebase team](https://firebase.google.com/docs/reference/swift/firebaseanalytics/api/reference/Categories/FIRAnalytics%28AppDelegate%29), apps on the UIScene life cycle must pass links to Firebase Analytics themselves, from both the cold-start and the running-app scene callbacks:
+
+```swift
+import FirebaseAnalytics
+
+func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+  // ... your existing setup, e.g. startReactNative(...)
+  connectionOptions.urlContexts.forEach { Analytics.handleOpen($0.url) }
+  connectionOptions.userActivities.forEach { Analytics.handleUserActivity($0) }
+}
+
+func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+  URLContexts.forEach { Analytics.handleOpen($0.url) }
+  RCTLinkingManager.scene(scene, openURLContexts: URLContexts)
+}
+
+func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+  Analytics.handleUserActivity(userActivity)
+  RCTLinkingManager.scene(scene, continue: userActivity)
+}
+```
+
+Keep any link forwarding your `SceneDelegate` already does (to `RCTLinkingManager`, or `super` in an Expo `ExpoAppSceneDelegate` subclass). The `@react-native-firebase/analytics` Expo config plugin does not add these calls.
+
+Apps that still use the `AppDelegate` life cycle need no changes.
+
 # firebase.json
 
 ## Disable Auto-Initialization
